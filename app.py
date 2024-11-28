@@ -37,12 +37,22 @@ def add_student():
     return redirect(url_for('index'))
 
 
-@app.route('/delete/<string:id>') 
+# @app.route('/delete/<string:id>') 
+# def delete_student(id):
+#     # RAW Query
+#     db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+#     db.session.commit()
+#     return redirect(url_for('index'))
+
+@app.route('/delete/<string:id>')
 def delete_student(id):
-    # RAW Query
-    db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+    db.session.execute(
+        text("DELETE FROM student WHERE id = :id"),
+        {'id': id}
+    )
     db.session.commit()
     return redirect(url_for('index'))
+
 
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
