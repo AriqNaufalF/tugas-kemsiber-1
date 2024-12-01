@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import flask_login
+import bleach
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
@@ -83,6 +84,11 @@ def add_student():
     name = request.form['name']
     age = request.form['age']
     grade = request.form['grade']
+
+    # Sanitize input
+    name = bleach.clean(name)
+    age = bleach.clean(age)
+    grade = bleach.clean(grade)
     
     # RAW Query
     db.session.execute(
@@ -121,12 +127,21 @@ def edit_student(id):
         grade = request.form['grade']
         
         # RAW Query
-        db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
+        # db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
+        db.session.execute(
+            text("UPDATE student SET name = :name, age = :age, grade = :grade WHERE id = :id"),
+            {'name': name, 'age': age, 'grade': grade, 'id': id}
+        )
+
         db.session.commit()
         return redirect(url_for('index'))
     else:
         # RAW Query
-        student = db.session.execute(text(f"SELECT * FROM student WHERE id={id}")).fetchone()
+        # student = db.session.execute(text(f"SELECT * FROM student WHERE id={id}")).fetchone()
+        student = db.session.execute(
+            text("SELECT * FROM student WHERE id = :id"),
+            {'id': id}
+        ).fetchone()
         return render_template('edit.html', student=student)
 
 if __name__ == '__main__':
